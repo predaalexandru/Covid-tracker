@@ -7,7 +7,17 @@ import Map from "./components/Maps/Map";
 
 function App() {
   const [countries, setCountries] = useState([]);
-  const [country, setCountry] = useState("worldwide");
+  const [country, setInputCountry] = useState("worldwide");
+  const [countryInfo, setCountryInfo] = useState({});
+
+  useEffect(() => {
+    fetch("https://disease.sh/v3/covid-19/all")
+      .then((response) => response.json())
+      .then((data) => {
+        setCountryInfo(data);
+      });
+  }, []);
+
 
   useEffect(() => {
     const getCountriesData = async () => {
@@ -30,8 +40,24 @@ function App() {
 
   const onCountryChange = async (e) => {
     const countryCode = e.target.value;
-    setCountry(countryCode);
+
+    const url =
+      countryCode === "worldwide"
+        ? "https://disease.sh/v3/covid-19/all"
+        : `https://disease.sh/v3/covid-19/countries/${countryCode}`;
+    await fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        setInputCountry(countryCode);
+        //All of data from the country response
+        setCountryInfo(data);
+        //setMapCenter([data.countryInfo.lat, data.countryInfo.long]);
+        //setMapZoom(4);
+      });
   };
+
+  console.log("COUNTRY INFO >>>>>", countryInfo)
+
 
 
   return (
@@ -54,11 +80,11 @@ function App() {
 
         <div className="app__stats">
           {/* InfoBoxs title=Coronavirus cases */}
-          <InfoBox title="Coronavirus Cases" cases={123} total={2000} />
+          <InfoBox title="Coronavirus Cases" cases={countryInfo.todayCases} total={countryInfo.cases} />
           {/* InfoBoxs title=Coronavirus recovers */}
-          <InfoBox title="Recovered" cases={1234} total={3000} />
+          <InfoBox title="Recovered" cases={countryInfo.todayRecovered} total={countryInfo.recovered} />
           {/* InfoBoxs title=Coronavirus deaths */}
-          <InfoBox title="Deaths" cases={12345} total={4000} />
+          <InfoBox title="Deaths" cases={countryInfo.todayDeaths} total={countryInfo.deaths} />
         </div>
 
         {/* Map */}
